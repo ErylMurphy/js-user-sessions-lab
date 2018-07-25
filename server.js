@@ -1,4 +1,6 @@
 const express = require("express");
+const session = require("express-session");
+const bodyParser = require("body-parser");
 
 const PORT = process.env.PORT || 4567;
 
@@ -6,11 +8,32 @@ const app = express();
 
 app.set("view engine", "ejs");
 
+app.use(
+  session({
+    secret: "some random string we should change for our application",
+    resave: false,
+    saveUninitialized: true
+  })
+);
+
+app.use(bodyParser.urlencoded({
+  extended: false
+}));
+
+
 app.get("/", (request, response) => {
-  response.render("home/index", { backgroundColor: "#F4FFFC" });
+  console.log(request.session);
+  const favoriteColor = request.session.favoriteColor;
+  response.render("home/index", { backgroundColor: favoriteColor, fontFamily: request.session.fontFamily});
 });
 
-app.post("/set-favorite-color", (request, response) => {});
+app.post("/set-favorite-color", (request, response) => {
+  console.log(request.body);
+  request.session.favoriteColor = request.body['favorite-color'];
+  request.session.fontFamily = request.body['font-family-dropdown'];
+  (response.redirect(302, '/'));
+});
+
 
 app.listen(PORT, () => {
   console.log(`Express web server listening on port ${PORT}`);
